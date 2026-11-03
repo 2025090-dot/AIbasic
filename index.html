@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메카프린트 - 3D 프린터 역학 계산기</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1lY2FQcmludCIsCiAgInNob3J0X25hbWUiOiAiTWVjYVByaW50IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJ0aGVtZV9jb2xvciI6ICIjMmMzZTUwIgp9">
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --bg: #ecf0f1; }
+        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 600px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-calc { background: var(--accent); color: white; }
+        .btn-manual { background: #7f8c8d; color: white; }
+        .result-box { background: #eef7fc; padding: 15px; border-radius: 6px; margin-top: 15px; border-left: 5px solid var(--accent); display: none; }
+        .print-list { margin-top: 25px; }
+        .print-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; background: #fff; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; }
+        .close-btn { float: right; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>⚙️ 메카프린트 (MecaPrint)</h2>
+    
+    <div class="form-group">
+        <label for="partName">부품 이름</label>
+        <input type="text" id="partName" placeholder="예: 로봇 아밍 피스톤 연결 부품">
+    </div>
+    <div class="form-group">
+        <label for="material">소재 선택</label>
+        <select id="material">
+            <option value="PLA">PLA (일반 플라스틱, 밀도 1.24g/cm³)</option>
+            <option value="ABS">ABS (고강도 엔지니어링, 밀도 1.04g/cm³)</option>
+            <option value="PETG">PETG (내열/내화학성, 밀도 1.27g/cm³)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="weight">예상 필라멘트 사용량 (g)</label>
+        <input type="number" id="weight" placeholder="예: 45">
+    </div>
+    <div class="form-group">
+        <label for="infill">내부 채움 비율 (Infill %)</label>
+        <input type="number" id="infill" value="20" placeholder="예: 20~100%">
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-calc" onclick="calculateAndSave()">역학 산출 & 저장</button>
+        <button class="btn-manual" onclick="toggleModal(true)">사용 방법</button>
+    </div>
+
+    <div class="result-box" id="resultBox"></div>
+    <div class="print-list" id="printList">데이터 불러오는 중...</div>
+</div>
+
+<div class="modal" id="manualModal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="toggleModal(false)">&times;</span>
+        <h3>📖 메카프린트 PWA 사용 방법</h3>
+        <p>1. <strong>앱 설치</strong>: 브라우저 메뉴의 [홈 화면에 추가]를 눌러 PWA로 설치합니다.</p>
+        <p>2. <strong>역학 계산</strong>: 부품명, 소재, 사용량(g), 채움 비율(Infill)을 입력 후 [역학 산출]을 누릅니다.</p>
+        <p>3. <strong>결과 확인</strong>: 필라멘트 예상 비용(원)과 약식 허용 인장 강도(MPa)를 산출해 구글 시트에 자동 저장합니다.</p>
+        <p>4. <strong>삭제</strong>: 목록의 [삭제] 버튼으로 구글 시트 데이터를 제거합니다.</p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run.withSuccessHandler(renderPrints).getPrints();
+        } else {
+            loadLocalPrints();
+        }
+    });
+
+    function calculateAndSave() {
+        const partName = document.getElementById("partName").value;
+        const material = document.getElementById("material").value;
+        const weight = parseFloat(document.getElementById("weight").value);
+        const infill = parseFloat(document.getElementById("infill").value);
+
+        if (!partName || isNaN(weight) || isNaN(infill)) {
+            alert("모든 치수와 항목을 올바르게 입력해주세요.");
+            return;
+        }
+
+        // 재료 단가 (원/g) 설정
+        let costPerGram = material === "PLA" ? 25 : (material === "ABS" ? 30 : 35);
+        let totalCost = Math.round(weight * costPerGram);
+
+        // 소재별 기준 인장강도(MPa) x Infill 비율 적용 약식 연산
+        let baseStrength = material === "PLA" ? 50 : (material === "ABS" ? 40 : 45);
+        let estStrength = (baseStrength * (infill / 100)).toFixed(1);
+
+        document.getElementById("resultBox").style.display = "block";
+        document.getElementById("resultBox").innerHTML = 
+            `<strong>[산출 결과]</strong><br>` +
+            `• 예상 제작 비용: <strong>${totalCost.toLocaleString()} 원</strong><br>` +
+            `• 추정 허용 강도: <strong>약 ${estStrength} MPa</strong>`;
+
+        const printData = {
+            id: Date.now(),
+            partName: partName,
+            material: material,
+            cost: totalCost + "원",
+            estStrength: estStrength + " MPa"
+        };
+
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run.withSuccessHandler(renderPrints).addPrint(printData);
+        } else {
+            let prints = JSON.parse(localStorage.getItem("prints") || "[]");
+            prints.push(printData);
+            localStorage.setItem("prints", JSON.stringify(prints));
+            renderPrints(prints);
+        }
+    }
+
+    function deletePrint(id) {
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run.withSuccessHandler(renderPrints).deletePrint(id);
+        } else {
+            let prints = JSON.parse(localStorage.getItem("prints") || "[]").filter(p => p.id !== id);
+            localStorage.setItem("prints", JSON.stringify(prints));
+            renderPrints(prints);
+        }
+    }
+
+    function loadLocalPrints() {
+        renderPrints(JSON.parse(localStorage.getItem("prints") || "[]"));
+    }
+
+    function renderPrints(prints) {
+        const list = document.getElementById("printList");
+        list.innerHTML = "";
+        if (!prints || prints.length === 0) {
+            list.innerHTML = "<p style='text-align:center;'>저장된 3D 파츠 데이터가 없습니다.</p>";
+            return;
+        }
+        prints.forEach(p => {
+            const item = document.createElement("div");
+            item.className = "print-item";
+            item.innerHTML = `
+                <div>
+                    <strong>[${p.material}] ${p.partName}</strong><br>
+                    <small>비용: ${p.cost} | 추정강도: ${p.estStrength}</small>
+                </div>
+                <button class="btn-delete" onclick="deletePrint(${p.id})">삭제</button>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function toggleModal(show) {
+        document.getElementById("manualModal").style.display = show ? "flex" : "none";
+    }
+</script>
+</body>
+</html>
