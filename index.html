@@ -7,23 +7,38 @@
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1lY2FQcmludCIsCiAgInNob3J0X25hbWUiOiAiTWVjYVByaW50IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJ0aGVtZV9jb2xvciI6ICIjMmMzZTUwIgp9">
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --bg: #ecf0f1; }
-        body { font-family: sans-serif; background-color: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 600px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-calc { background: var(--accent); color: white; }
+        .btn-calc:hover { background: #2980b9; }
         .btn-manual { background: #7f8c8d; color: white; }
+        .btn-manual:hover { background: #6c757d; }
         .result-box { background: #eef7fc; padding: 15px; border-radius: 6px; margin-top: 15px; border-left: 5px solid var(--accent); display: none; }
         .print-list { margin-top: 25px; }
         .print-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; background: #fff; }
         .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; max-width: 400px; width: 90%; }
-        .close-btn { float: right; cursor: pointer; font-weight: bold; }
+        
+        /* 모달 스타일 (스크롤 및 디자인 고도화) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { 
+            background: white; padding: 25px; border-radius: 12px; 
+            max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2); line-height: 1.6;
+        }
+        .modal-content h3 { color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--accent); padding-bottom: 8px; }
+        .modal-content h4 { color: var(--accent); margin: 15px 0 5px 0; font-size: 1em; }
+        .modal-content ul, .modal-content ol { padding-left: 20px; margin: 5px 0; }
+        .modal-content li { margin-bottom: 5px; font-size: 0.92em; }
+        .close-btn { float: right; cursor: pointer; font-weight: bold; font-size: 1.3em; color: #888; }
+        .close-btn:hover { color: #000; }
+        .faq-q { font-weight: bold; color: #2c3e50; }
+        .faq-a { color: #555; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -61,14 +76,47 @@
     <div class="print-list" id="printList">데이터 불러오는 중...</div>
 </div>
 
+<!-- 맛깔나게 개편된 사용자 매뉴얼 모달 -->
 <div class="modal" id="manualModal">
     <div class="modal-content">
         <span class="close-btn" onclick="toggleModal(false)">&times;</span>
-        <h3>📖 메카프린트 PWA 사용 방법</h3>
-        <p>1. <strong>앱 설치</strong>: 브라우저 메뉴의 [홈 화면에 추가]를 눌러 PWA로 설치합니다.</p>
-        <p>2. <strong>역학 계산</strong>: 부품명, 소재, 사용량(g), 채움 비율(Infill)을 입력 후 [역학 산출]을 누릅니다.</p>
-        <p>3. <strong>결과 확인</strong>: 필라멘트 예상 비용(원)과 약식 허용 인장 강도(MPa)를 산출해 구글 시트에 자동 저장합니다.</p>
-        <p>4. <strong>삭제</strong>: 목록의 [삭제] 버튼으로 구글 시트 데이터를 제거합니다.</p>
+        <h3>📖 메카프린트 사용자 매뉴얼</h3>
+        
+        <h4>1. 프로그램 소개</h4>
+        <p style="font-size: 0.9em; color: #444;">
+            <strong>메카프린트(MecaPrint)</strong>는 3D 프린터 기반 메이커 프로젝트 및 기계 요소 설계 시, 파츠의 재료 비용과 재료역학적 추정 인장강도를 사전에 계산하고 구글 시트 데이터베이스에 자동 기록해 주는 <strong>고교생 및 메이커 전용 공학 보조 PWA 웹앱</strong>입니다.
+        </p>
+
+        <h4>2. 접속 및 설치 방법 (PWA)</h4>
+        <ul>
+            <li><strong>접속</strong>: 모바일/PC 브라우저(Chrome, Safari)로 배포 URL에 접속합니다.</li>
+            <li><strong>앱 설치</strong>: 브라우저 우측 상단 메뉴(또는 공유 버튼)에서 <strong>[홈 화면에 추가]</strong> 또는 <strong>[앱 설치]</strong>를 클릭하면 스마트폰 바탕화면에 즉시 독립 실행형 앱으로 설치됩니다.</li>
+        </ul>
+
+        <h4>3. 화면 요소 설명</h4>
+        <ul>
+            <li><strong>부품 이름 (입력)</strong>: 제작할 3D 부품의 명칭을 입력합니다.</li>
+            <li><strong>소재 선택 (드롭다운)</strong>: 출력에 사용할 소재(PLA / ABS / PETG)를 선택합니다.</li>
+            <li><strong>필라멘트 사용량 (입력)</strong>: 슬라이서 프로그램에서 확인된 부품 무게(g)를 입력합니다.</li>
+            <li><strong>내부 채움 비율 (입력)</strong>: 3D 프린터 내부 밀도 설정값(Infill %, 20~100)을 입력합니다.</li>
+            <li><strong>[역학 산출 & 저장] 버튼</strong>: 입력 수치를 분석해 비용/강도를 산출하고 백엔드에 기록합니다.</li>
+            <li><strong>[사용 방법] 버튼</strong>: 현재 매뉴얼 모달 창을 엽니다.</li>
+            <li><strong>[삭제] 버튼</strong>: 목록의 특정 파츠 항목을 DB와 화면에서 제거합니다.</li>
+        </ul>
+
+        <h4>4. 기능별 사용 방법 (순서대로 따라하기)</h4>
+        <ol>
+            <li><strong>[기능 1] 역학 산출</strong>: 부품명, 소재, 사용량(g), Infill(%)을 입력 후 <code>[역학 산출 & 저장]</code>을 누르면 결과 상자에 예상 비용(원)과 추정 인장강도(MPa)가 도출됩니다.</li>
+            <li><strong>[기능 2] 구글 시트/DB 자동 저장</strong>: 산출과 동시에 구글 스프레드시트 백엔드 및 브라우저 저장소에 데이터가 자동 저장되어 하단 리스트에 실시간 반영됩니다.</li>
+            <li><strong>[기능 3] 파츠 관리 및 삭제</strong>: 출력이 완료되었거나 필요 없어진 항목은 오른쪽 <code>[삭제]</code> 버튼을 눌러 구글 시트와 앱 화면에서 동시 삭제합니다.</li>
+        </ol>
+
+        <h4>5. 주의사항 및 자주 묻는 질문 (FAQ)</h4>
+        <div class="faq-q">Q1. 추정 인장강도(MPa)는 절대적인 수치인가요?</div>
+        <div class="faq-a">A. 아니요! 본 앱의 강도는 소재별 고유 기준 강도에 Infill 비율을 비례 적용한 약식 공학 산출값입니다. 적층 결 방향이나 온도 등 출력 환경에 따라 차이가 발생할 수 있습니다.</div>
+        
+        <div class="faq-q">Q2. 오프라인에서도 사용할 수 있나요?</div>
+        <div class="faq-a">A. 네, PWA 기술로 제작되어 인터넷이 끊긴 상태에서도 브라우저 저장소(LocalStorage)를 통해 정상 연산 및 저장이 가능하며, 인터넷 재연결 시 백엔드와 동기화됩니다.</div>
     </div>
 </div>
 
@@ -92,11 +140,9 @@
             return;
         }
 
-        // 재료 단가 (원/g) 설정
         let costPerGram = material === "PLA" ? 25 : (material === "ABS" ? 30 : 35);
         let totalCost = Math.round(weight * costPerGram);
 
-        // 소재별 기준 인장강도(MPa) x Infill 비율 적용 약식 연산
         let baseStrength = material === "PLA" ? 50 : (material === "ABS" ? 40 : 45);
         let estStrength = (baseStrength * (infill / 100)).toFixed(1);
 
