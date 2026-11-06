@@ -8,62 +8,92 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1lY2FQcmludCIsCiAgInNob3J0X25hbWUiOiAiTWVjYVByaW50IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJ0aGVtZV9jb2xvciI6ICIjMDI4NGM3Igp9">
     <style>
+        /* 1. 순수 CSS CAD 청사진 격자 배경 (무조건 화면에 출력) */
+        body {
+            background-color: #030712;
+            background-image: 
+                linear-gradient(to right, rgba(14, 165, 233, 0.18) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(14, 165, 233, 0.18) 1px, transparent 1px);
+            background-size: 32px 32px;
+            background-attachment: fixed;
+        }
+
+        /* 2. 앰비언트 글로우 조명 (순수 CSS 구형 원형 광원) */
+        .glow-blob-left {
+            position: fixed; top: -10%; left: -10%; width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(2, 132, 199, 0.4) 0%, rgba(3, 7, 18, 0) 70%);
+            pointer-events: none; z-index: 0;
+        }
+        .glow-blob-right {
+            position: fixed; bottom: -10%; right: -10%; width: 550px; height: 550px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.35) 0%, rgba(3, 7, 18, 0) 70%);
+            pointer-events: none; z-index: 0;
+        }
+
+        /* 3. 플로팅 글래스모피즘 네온 카운터 그림자 */
+        .glow-main-card {
+            box-shadow: 0 0 45px rgba(2, 132, 199, 0.3), inset 0 0 15px rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+        }
+
         @keyframes print-head { 0%, 100% { transform: translateX(0px); } 50% { transform: translateX(90px); } }
         @keyframes bed-down { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(6px); } }
-        @keyframes pulse-glow { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        @keyframes pulse-glow { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
         @keyframes slow-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
         .nozzle-head { animation: print-head 2.2s ease-in-out infinite; }
         .print-bed { animation: bed-down 4.4s ease-in-out infinite; }
         .laser-glow { animation: pulse-glow 1.1s ease-in-out infinite; }
-        .bg-gear { animation: slow-spin 40s linear infinite; }
-        .active-tab { border-bottom: 3px solid #0284c7; color: #0284c7; font-weight: 800; }
+        .bg-gear { animation: slow-spin 30s linear infinite; }
+        .active-tab { border-bottom: 3px solid #38bdf8; color: #38bdf8; font-weight: 800; }
         .modal-body { max-height: 70vh; overflow-y: auto; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen pb-16 sm:pb-0 flex flex-col items-center justify-start font-sans relative overflow-x-hidden selection:bg-sky-500 selection:text-white">
+<body class="text-slate-100 min-h-screen pb-16 sm:pb-6 flex flex-col items-center justify-center font-sans relative overflow-x-hidden selection:bg-sky-500 selection:text-white">
 
 <script>
     // ★ Google Apps Script 웹앱 배포 URL (/exec 주소)
     const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_eEHtNIKcsVTaZdt6AgpZdmSc1oRz1p1K3tpHQYgMcS1MNuoZbleF80KxwDFKjEgVzw/exec";
 </script>
 
-<!-- 배경 공간감을 채우는 앰비언트 글로우 & CAD 청사진 그리드 -->
-<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-    <!-- 3D 앰비언트 조명 효과 -->
-    <div class="absolute -top-32 -left-32 w-96 h-96 bg-sky-600/15 rounded-full blur-[100px]"></div>
-    <div class="absolute top-1/3 -right-32 w-[30rem] h-[30rem] bg-cyan-500/10 rounded-full blur-[120px]"></div>
-    <div class="absolute -bottom-32 left-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-[100px]"></div>
-    
-    <!-- 공학용 CAD 모논종이 청사진 패턴 -->
-    <div class="absolute inset-0 opacity-[0.05]" style="background-image: linear-gradient(#38bdf8 1px, transparent 1px), linear-gradient(90deg, #38bdf8 1px, transparent 1px); background-size: 32px 32px;"></div>
+<!-- 배경 광원 레이어 -->
+<div class="glow-blob-left"></div>
+<div class="glow-blob-right"></div>
 
-    <!-- PC 대화면 데코레이션 앰비언트 그래픽 -->
-    <div class="hidden lg:flex absolute top-12 left-12 items-center gap-3 opacity-15 select-none">
-        <div class="text-7xl bg-gear">⚙️</div>
-        <div>
-            <div class="text-xs font-black tracking-widest text-sky-400">MECHATRONICS</div>
-            <div class="text-[10px] text-slate-400">3D PRINTING STUDIO</div>
+<!-- 4. PC 대화면 (1024px 이상 노트북부터) 구석 앰비언트 그래픽 -->
+<div class="hidden lg:flex fixed top-10 left-8 items-center gap-4 p-4 rounded-2xl bg-slate-900/80 border border-sky-500/30 backdrop-blur-md opacity-80 z-0 pointer-events-none shadow-xl">
+    <div class="text-4xl bg-gear">⚙️</div>
+    <div>
+        <div class="text-xs font-black tracking-widest text-sky-400">MECHATRONICS</div>
+        <div class="text-[10px] text-slate-300 font-mono">3D PRINTING STUDIO</div>
+        <div class="mt-1 flex gap-1.5 items-center">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-[9px] text-emerald-400 font-bold">CAD ENGINE ACTIVE</span>
         </div>
-    </div>
-    
-    <div class="hidden lg:flex absolute bottom-12 right-12 items-center gap-3 opacity-15 select-none text-right">
-        <div>
-            <div class="text-xs font-black tracking-widest text-cyan-400">CAD / SLICING</div>
-            <div class="text-[10px] text-slate-400">COST ANALYZER</div>
-        </div>
-        <div class="text-7xl">🖨️</div>
     </div>
 </div>
 
-<!-- 메인 앱 컨테이너 (글래스모피즘 & 플로팅 네온 그림자) -->
-<div class="relative z-10 w-full max-w-xl bg-slate-900/90 backdrop-blur-xl border-x border-b border-slate-700/80 shadow-[0_0_50px_rgba(2,132,199,0.2)] min-h-screen flex flex-col my-0 sm:my-4 sm:min-h-[calc(100vh-2rem)] sm:rounded-2xl overflow-hidden">
+<div class="hidden lg:flex fixed bottom-10 right-8 items-center gap-4 p-4 rounded-2xl bg-slate-900/80 border border-cyan-500/30 backdrop-blur-md opacity-80 text-right z-0 pointer-events-none shadow-xl">
+    <div>
+        <div class="text-xs font-black tracking-widest text-cyan-400">COST ANALYZER</div>
+        <div class="text-[10px] text-slate-300 font-mono">PRECISION CALC V2.0</div>
+        <div class="mt-1 flex justify-end gap-1.5 items-center">
+            <span class="text-[9px] text-sky-400 font-bold">PWA CONNECTED</span>
+            <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+        </div>
+    </div>
+    <div class="text-4xl">🖨️</div>
+</div>
+
+<!-- 메인 앱 컨테이너 (글래스모피즘 네온 테두리 적용) -->
+<div class="relative z-10 w-full max-w-xl bg-slate-900/95 backdrop-blur-2xl glow-main-card min-h-screen flex flex-col sm:min-h-0 sm:my-6 sm:rounded-3xl overflow-hidden">
     <!-- 상단 앱 헤더 -->
     <header class="p-4 bg-slate-900/90 backdrop-blur sticky top-0 z-30 border-b border-slate-800 flex justify-between items-center">
         <div class="flex items-center gap-2.5">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-cyan-400 flex items-center justify-center text-xl shadow-lg shadow-sky-500/30">🖨️</div>
             <div>
                 <h1 class="text-base font-black tracking-tight text-white flex items-center gap-1.5">
-                    MecaPrint <span class="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/30 px-1.5 py-0.5 rounded-md font-extrabold">PRO</span>
+                    MecaPrint <span class="text-[9px] bg-sky-500/20 text-sky-400 border border-sky-500/40 px-1.5 py-0.5 rounded-md font-extrabold">PRO</span>
                 </h1>
                 <p class="text-[10px] text-slate-400">3D 프린팅 적층 공정 & 원가 계산 솔루션</p>
             </div>
@@ -74,7 +104,7 @@
     </header>
 
     <!-- 앱 네비게이션 탭 -->
-    <nav class="flex border-b border-slate-800 bg-slate-950/60 text-xs text-slate-400 sticky top-[65px] z-20 backdrop-blur">
+    <nav class="flex border-b border-slate-800 bg-slate-950/80 text-xs text-slate-400 sticky top-[65px] z-20 backdrop-blur">
         <button type="button" id="tabBtnCalc" onclick="switchTab('calc')" class="flex-1 py-3 text-center active-tab transition">🧮 공정 산출</button>
         <button type="button" id="tabBtnList" onclick="switchTab('list')" class="flex-1 py-3 text-center transition flex justify-center items-center gap-1">
             📂 저장 목록 <span id="listBadge" class="bg-sky-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold hidden">0</span>
@@ -91,7 +121,7 @@
             <div>
                 <label class="block text-xs font-bold text-slate-300 mb-2">⚡ 3D 프린팅 전용 프리셋 소재</label>
                 <div class="grid grid-cols-2 gap-2">
-                    <button type="button" onclick="applyPreset('pla')" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-xl text-left transition group">
+                    <button type="button" onclick="applyPreset('pla')" class="p-2.5 bg-slate-800/90 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-xl text-left transition group">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-xs font-bold text-white group-hover:text-sky-400">🧪 PLA 파츠</span>
                             <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded">시가공</span>
@@ -99,7 +129,7 @@
                         <p class="text-[10px] text-slate-400">22,000원/kg • 250W</p>
                     </button>
 
-                    <button type="button" onclick="applyPreset('petg')" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-xl text-left transition group">
+                    <button type="button" onclick="applyPreset('petg')" class="p-2.5 bg-slate-800/90 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-xl text-left transition group">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-xs font-bold text-white group-hover:text-sky-400">⚙️ PETG 강성</span>
                             <span class="text-[9px] bg-sky-500/20 text-sky-300 px-1.5 py-0.5 rounded">기계부품</span>
@@ -107,7 +137,7 @@
                         <p class="text-[10px] text-slate-400">28,000원/kg • 320W</p>
                     </button>
 
-                    <button type="button" onclick="applyPreset('abs')" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-xl text-left transition group">
+                    <button type="button" onclick="applyPreset('abs')" class="p-2.5 bg-slate-800/90 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-xl text-left transition group">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-xs font-bold text-white group-hover:text-sky-400">🔥 ABS 내열</span>
                             <span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">고온용</span>
@@ -115,7 +145,7 @@
                         <p class="text-[10px] text-slate-400">30,000원/kg • 400W</p>
                     </button>
 
-                    <button type="button" onclick="applyPreset('tpu')" class="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-xl text-left transition group">
+                    <button type="button" onclick="applyPreset('tpu')" class="p-2.5 bg-slate-800/90 hover:bg-slate-800 border border-slate-700 hover:border-sky-500 rounded-xl text-left transition group">
                         <div class="flex justify-between items-center mb-1">
                             <span class="text-xs font-bold text-white group-hover:text-sky-400">🩰 TPU 유연</span>
                             <span class="text-[9px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded">탄성체</span>
@@ -126,7 +156,7 @@
             </div>
 
             <!-- 입력 폼 -->
-            <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800 space-y-3.5">
+            <div class="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-3.5">
                 <div>
                     <label for="printName" class="block text-xs font-bold text-slate-300 mb-1">출력 프로젝트 / 파츠 명칭</label>
                     <input type="text" id="printName" placeholder="예: 메카넘휠 감속기 하우징 V1" class="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:border-sky-500 outline-none transition">
@@ -238,96 +268,4 @@
                     </div>
                     <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800">
                         <span class="font-bold text-white block mb-0.5">💡 속도 vs 품질</span>
-                        <span class="text-slate-400 text-[11px]">구동 익스트루더 토크를 높여 적층 속도를 가속하면 가공 시간당 전력비가 절감됩니다.</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-</div>
-
-<!-- 사용자 매뉴얼 모달 -->
-<div id="manualModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl">
-        <div class="flex justify-between items-center pb-3 border-b border-slate-800">
-            <h3 class="font-black text-base text-sky-400 flex items-center gap-1.5">📖 메카프린트 사용 매뉴얼</h3>
-            <button type="button" onclick="closeManual()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
-        </div>
-        
-        <div class="modal-body py-4 space-y-4 text-xs text-slate-300 leading-relaxed">
-            <section>
-                <h4 class="font-bold text-sky-400 mb-1">1. 프로그램 소개</h4>
-                <p><strong>메카프린트(MecaPrint) Pro</strong>는 기계공학 파츠 출력 시 필라멘트 소비량, 전력비, 가공 시간을 통합 연산해 정밀 생산 원가를 산출하는 <strong>공학 PWA 웹앱</strong>입니다.</p>
-            </section>
-            <section>
-                <h4 class="font-bold text-sky-400 mb-1">2. PWA 앱 설치법</h4>
-                <p>모바일/PC 브라우저 메뉴의 <code>[홈 화면에 추가]</code>를 누르면 바탕화면에 앱 아이콘이 생성되어 단독 앱으로 구동됩니다.</p>
-            </section>
-            <section>
-                <h4 class="font-bold text-sky-400 mb-1">3. 화면 주요 용어</h4>
-                <ul class="list-disc pl-4 space-y-1 text-slate-400">
-                    <li><strong>구동 기어 (Extruder Driver)</strong>: 노즐로 필라멘트를 밀어넣는 핵심 주도 기어입니다.</li>
-                    <li><strong>소비 전력 (W)</strong>: 노즐 히터 및 핫베드 가열 시 전력 수치입니다.</li>
-                </ul>
-            </section>
-            <section>
-                <h4 class="font-bold text-sky-400 mb-1">4. 3가지 핵심 기능</h4>
-                <ol class="list-decimal pl-4 space-y-1 text-slate-400">
-                    <li><strong>[기능 1] 원가 연산 & 적층 시뮬레이션</strong>: 수치 입력 시 재료비/전력비 및 적층 모션 실시간 출력.</li>
-                    <li><strong>[기능 2] 깃허브 - 구글 시트 원격 연동</strong>: 산출 데이터가 구글 스프레드시트에 자동 연동 저장.</li>
-                    <li><strong>[기능 3] 상단 고정(📌)</strong>: 중요 파츠 데이터를 최상단에 고정 관리.</li>
-                </ol>
-            </section>
-            <section>
-                <h4 class="font-bold text-sky-400 mb-1">5. FAQ</h4>
-                <p class="text-slate-400"><strong>Q. 음수가 들어가나요?</strong><br>A. 질량, 시간, 전력은 양수만 허용되므로 마이너스(-) 수치는 자동 제거됩니다.</p>
-            </section>
-        </div>
-    </div>
-</div>
-
-<!-- 실시간 앱 토스트 알림 메시지 -->
-<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-800 text-sky-400 border border-sky-500/40 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
-    <span id="toastMsg">저장되었습니다!</span>
-</div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", loadLocalPrints);
-
-    function switchTab(tab) {
-        document.getElementById("tabCalc").classList.add("hidden");
-        document.getElementById("tabList").classList.add("hidden");
-        document.getElementById("tabStats").classList.add("hidden");
-        document.getElementById("tabBtnCalc").classList.remove("active-tab");
-        document.getElementById("tabBtnList").classList.remove("active-tab");
-        document.getElementById("tabBtnStats").classList.remove("active-tab");
-
-        if (tab === 'calc') {
-            document.getElementById("tabCalc").classList.remove("hidden");
-            document.getElementById("tabBtnCalc").classList.add("active-tab");
-        } else if (tab === 'list') {
-            document.getElementById("tabList").classList.remove("hidden");
-            document.getElementById("tabBtnList").classList.add("active-tab");
-        } else if (tab === 'stats') {
-            document.getElementById("tabStats").classList.remove("hidden");
-            document.getElementById("tabBtnStats").classList.add("active-tab");
-        }
-    }
-
-    function preventNegative(input) {
-        if (input.value < 0) input.value = "";
-    }
-
-    function showToast(msg) {
-        const toast = document.getElementById("toast");
-        document.getElementById("toastMsg").innerText = msg;
-        toast.classList.remove("opacity-0", "pointer-events-none");
-        setTimeout(() => {
-            toast.classList.add("opacity-0", "pointer-events-none");
-        }, 2200);
-    }
-
-    function applyPreset(type) {
-        const presets = {
-            pla: { name: "PLA 신속 시가공 파츠", weight: 45, time: 2.0, cost: 22000, watts: 250 },
-            petg: { name: "PETG 기계 내구 부품", weight: 110, time: 5.5, cost: 28000, watts:
+                        <span class="text-slate-400 text-[11px]">구동 익스트
