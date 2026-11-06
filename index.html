@@ -3,210 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>메카프린트 - 3D 프린터 역학 계산기</title>
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1lY2FQcmludCIsCiAgInNob3J0X25hbWUiOiAiTWVjYVByaW50IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJ0aGVtZV9jb2xvciI6ICIjMmMzZTUwIgp9">
+    <title>메카프린트 - 3D 프린팅 & 메카트로닉스 공정 산출기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1lY2FQcmludCIsCiAgInNob3J0X25hbWUiOiAiTWVjYVByaW50IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJ0aGVtZV_jb2xvciI6ICIjMDI4NGM3Igp9">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --danger: #e74c3c; --bg: #ecf0f1; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 600px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-calc { background: var(--accent); color: white; }
-        .btn-calc:hover { background: #2980b9; }
-        .btn-manual { background: #7f8c8d; color: white; }
-        .btn-manual:hover { background: #6c757d; }
-        .result-box { background: #eef7fc; padding: 15px; border-radius: 6px; margin-top: 15px; border-left: 5px solid var(--accent); display: none; }
-        .print-list { margin-top: 25px; }
-        .print-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; background: #fff; }
-        .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        
-        /* 모달 스타일 (스크롤 및 디자인 고도화) */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { 
-            background: white; padding: 25px; border-radius: 12px; 
-            max-width: 500px; width: 90%; max-height: 85vh; overflow-y: auto;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2); line-height: 1.6;
-        }
-        .modal-content h3 { color: var(--primary); margin-top: 0; border-bottom: 2px solid var(--accent); padding-bottom: 8px; }
-        .modal-content h4 { color: var(--accent); margin: 15px 0 5px 0; font-size: 1em; }
-        .modal-content ul, .modal-content ol { padding-left: 20px; margin: 5px 0; }
-        .modal-content li { margin-bottom: 5px; font-size: 0.92em; }
-        .close-btn { float: right; cursor: pointer; font-weight: bold; font-size: 1.3em; color: #888; }
-        .close-btn:hover { color: #000; }
-        .faq-q { font-weight: bold; color: #2c3e50; }
-        .faq-a { color: #555; margin-bottom: 8px; }
+        @keyframes print-head { 0%, 100% { transform: translateX(0px); } 50% { transform: translateX(70px); } }
+        @keyframes bed-down { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(8px); } }
+        .nozzle-head { animation: print-head 2.5s ease-in-out infinite; }
+        .print-bed { animation: bed-down 5s ease-in-out infinite; }
+        .modal-body { max-height: 75vh; overflow-y: auto; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 flex justify-center items-start">
 
-<div class="container">
-    <h2>⚙️ 메카프린트 (MecaPrint)</h2>
-    
-    <div class="form-group">
-        <label for="partName">부품 이름</label>
-        <input type="text" id="partName" placeholder="예: 로봇 아밍 피스톤 연결 부품">
-    </div>
-    <div class="form-group">
-        <label for="material">소재 선택</label>
-        <select id="material">
-            <option value="PLA">PLA (일반 플라스틱, 밀도 1.24g/cm³)</option>
-            <option value="ABS">ABS (고강도 엔지니어링, 밀도 1.04g/cm³)</option>
-            <option value="PETG">PETG (내열/내화학성, 밀도 1.27g/cm³)</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="weight">예상 필라멘트 사용량 (g)</label>
-        <input type="number" id="weight" placeholder="예: 45">
-    </div>
-    <div class="form-group">
-        <label for="infill">내부 채움 비율 (Infill %)</label>
-        <input type="number" id="infill" value="20" placeholder="예: 20~100%">
+<script>
+    // ★ Apps Script에서 배포한 구글 웹앱 URL(/exec로 끝나는 주소)을 아래 따옴표 안에 넣으세요!
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyI5OVhmTXc682BTyB_NxIJSMdeYY3-hEa3HD39gRCW0Mxg27FHHpFpqL64sYb7RQNpAw/exec";
+</script>
+
+<div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-slate-200 p-6 my-4">
+    <!-- 헤더 -->
+    <div class="text-center mb-6 border-b pb-4 border-slate-100">
+        <h1 class="text-2xl font-black text-sky-600 flex items-center justify-center gap-2">
+            🖨️ 메카프린트 (MecaPrint)
+        </h1>
+        <p class="text-xs text-slate-500 mt-1">기계공학과 메이커를 위한 3D 프린팅 공정/소재 견적 정밀 산출 웹앱</p>
     </div>
 
-    <div class="btn-group">
-        <button class="btn-calc" onclick="calculateAndSave()">역학 산출 & 저장</button>
-        <button class="btn-manual" onclick="toggleModal(true)">사용 방법</button>
+    <!-- 쾌속 프리셋 -->
+    <div class="mb-5 bg-sky-50 p-3 rounded-xl border border-sky-200">
+        <span class="text-xs font-bold text-sky-800 block mb-2">⚡ 공학용 3D 프린팅 쾌속 프리셋</span>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button type="button" onclick="applyPreset('pla')" class="px-2 py-1.5 bg-white border border-sky-300 hover:bg-sky-100 text-sky-900 rounded-lg text-xs font-semibold transition">🧪 PLA 신속 시가공</button>
+            <button type="button" onclick="applyPreset('petg')" class="px-2 py-1.5 bg-white border border-sky-300 hover:bg-sky-100 text-sky-900 rounded-lg text-xs font-semibold transition">⚙️ PETG 기계 부품</button>
+            <button type="button" onclick="applyPreset('abs')" class="px-2 py-1.5 bg-white border border-sky-300 hover:bg-sky-100 text-sky-900 rounded-lg text-xs font-semibold transition">🔥 ABS 내열 파츠</button>
+            <button type="button" onclick="applyPreset('tpu')" class="px-2 py-1.5 bg-white border border-sky-300 hover:bg-sky-100 text-sky-900 rounded-lg text-xs font-semibold transition">🩰 TPU 유연 부품</button>
+        </div>
     </div>
 
-    <div class="result-box" id="resultBox"></div>
-    <div class="print-list" id="printList">데이터 불러오는 중...</div>
+    <!-- 입력 폼 -->
+    <div class="space-y-4">
+        <div>
+            <label for="printName" class="block text-xs font-bold text-slate-700 mb-1">출력 파츠/프로젝트 명칭</label>
+            <input type="text" id="printName" placeholder="예: 구동 기어박스 하우징 V2" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label for="filamentWeight" class="block text-xs font-bold text-slate-700 mb-1">
+                    필라멘트 사용량 (g)
+                    <span class="text-[10px] text-sky-600 font-normal block">💡 구동 익스트루더 기어로 공급되는 소재 질량</span>
+                </label>
+                <input type="number" id="filamentWeight" min="0.1" step="0.5" oninput="preventNegative(this)" placeholder="예: 85" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none">
+            </div>
+            <div>
+                <label for="printTime" class="block text-xs font-bold text-slate-700 mb-1">
+                    예상 출력 시간 (시간)
+                    <span class="text-[10px] text-slate-500 font-normal block">💡 G-code 스파이더 슬라이서 연산 시간</span>
+                </label>
+                <input type="number" id="printTime" min="0.1" step="0.5" oninput="preventNegative(this)" placeholder="예: 4.5" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label for="filamentCost" class="block text-xs font-bold text-slate-700 mb-1">필라멘트 단가 (원/kg)</label>
+                <input type="number" id="filamentCost" min="1000" step="1000" oninput="preventNegative(this)" placeholder="예: 25000" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none">
+            </div>
+            <div>
+                <label for="powerWatts" class="block text-xs font-bold text-slate-700 mb-1">장비 소비 전력 (W)</label>
+                <input type="number" id="powerWatts" min="10" step="10" oninput="preventNegative(this)" placeholder="예: 350" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:bg-white outline-none">
+            </div>
+        </div>
+    </div>
+
+    <!-- 버튼 그룹 -->
+    <div class="flex gap-2 mt-5">
+        <button type="button" onclick="calculateAndSave()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl shadow-md transition text-sm">
+            🖨️ 공정 견적 산출 & 저장
+        </button>
+        <button type="button" onclick="toggleModal(true)" class="bg-slate-600 hover:bg-slate-700 text-white font-bold px-4 py-3 rounded-xl shadow-md transition text-sm">
+            📖 사용 방법
+        </button>
+    </div>
+
+    <!-- 결과 박스 & 시뮬레이터 -->
+    <div id="resultBox" class="hidden mt-6 bg-sky-50 border-2 border-sky-300 rounded-xl p-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div>
+                <span class="text-xs font-bold text-sky-800 bg-sky-200 px-2 py-0.5 rounded">공정 분석 결과</span>
+                <ul class="mt-2 space-y-1 text-sm font-semibold text-slate-800">
+                    <li>• 재료비 (Filament): <span id="resFilamentCost" class="text-sky-700 font-black"></span></li>
+                    <li>• 예상 전력비 (Power): <span id="resPowerCost" class="text-sky-700 font-black"></span></li>
+                    <li>• 총 생산 원가 (Total): <span id="resTotalCost" class="text-sky-700 font-black"></span></li>
+                    <li>• 시간당 생산성: <span id="resRate" class="text-sky-700 font-black"></span></li>
+                </ul>
+            </div>
+            <div class="bg-white p-3 rounded-lg border border-sky-200 flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 mb-1">3D 적층 시뮬레이션</span>
+                <svg width="200" height="110" viewBox="0 0 200 110" class="overflow-visible">
+                    <rect x="30" y="80" width="140" height="8" fill="#64748b" rx="2" class="print-bed"/>
+                    <g class="nozzle-head">
+                        <polygon points="55,20 85,20 75,50 65,50" fill="#0284c7"/>
+                        <rect x="67" y="50" width="6" height="8" fill="#d97706"/>
+                        <line x1="70" y1="58" x2="70" y2="80" stroke="#38bdf8" stroke-width="3" stroke-dasharray="2 2"/>
+                    </g>
+                    <rect x="60" y="70" width="80" height="10" fill="#bae6fd" rx="1"/>
+                </svg>
+                <div class="flex gap-4 text-[10px] font-bold mt-1">
+                    <span class="text-sky-600">● 구동 노즐 헤드</span>
+                    <span class="text-slate-500">● 베드 적층 레이어</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 저장 목록 -->
+    <div class="mt-8">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-bold text-slate-700 flex items-center gap-1">
+                📂 저장된 메카프린트 공정 목록
+            </h3>
+            <span class="text-[10px] text-slate-400">📌 고정된 항목은 상단에 유지됩니다</span>
+        </div>
+        <div id="printList" class="space-y-2">
+            <p class="text-center text-xs text-slate-400 py-4">저장된 공정 데이터가 없습니다.</p>
+        </div>
+    </div>
 </div>
 
-<!-- 맛깔나게 개편된 사용자 매뉴얼 모달 -->
-<div class="modal" id="manualModal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="toggleModal(false)">&times;</span>
-        <h3>📖 메카프린트 사용자 매뉴얼</h3>
+<!-- 매뉴얼 모달 -->
+<div id="manualModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+            <h3 class="font-black text-lg text-sky-600">📖 메카프린트 사용자 매뉴얼</h3>
+            <button type="button" onclick="toggleModal(false)" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+        </div>
         
-        <h4>1. 프로그램 소개</h4>
-        <p style="font-size: 0.9em; color: #444;">
-            <strong>메카프린트(MecaPrint)</strong>는 3D 프린터 기반 메이커 프로젝트 및 기계 요소 설계 시, 파츠의 재료 비용과 재료역학적 추정 인장강도를 사전에 계산하고 구글 시트 데이터베이스에 자동 기록해 주는 <strong>고교생 및 메이커 전용 공학 보조 PWA 웹앱</strong>입니다.
-        </p>
-
-        <h4>2. 접속 및 설치 방법 (PWA)</h4>
-        <ul>
-            <li><strong>접속</strong>: 모바일/PC 브라우저(Chrome, Safari)로 배포 URL에 접속합니다.</li>
-            <li><strong>앱 설치</strong>: 브라우저 우측 상단 메뉴(또는 공유 버튼)에서 <strong>[홈 화면에 추가]</strong> 또는 <strong>[앱 설치]</strong>를 클릭하면 스마트폰 바탕화면에 즉시 독립 실행형 앱으로 설치됩니다.</li>
-        </ul>
-
-        <h4>3. 화면 요소 설명</h4>
-        <ul>
-            <li><strong>부품 이름 (입력)</strong>: 제작할 3D 부품의 명칭을 입력합니다.</li>
-            <li><strong>소재 선택 (드롭다운)</strong>: 출력에 사용할 소재(PLA / ABS / PETG)를 선택합니다.</li>
-            <li><strong>필라멘트 사용량 (입력)</strong>: 슬라이서 프로그램에서 확인된 부품 무게(g)를 입력합니다.</li>
-            <li><strong>내부 채움 비율 (입력)</strong>: 3D 프린터 내부 밀도 설정값(Infill %, 20~100)을 입력합니다.</li>
-            <li><strong>[역학 산출 & 저장] 버튼</strong>: 입력 수치를 분석해 비용/강도를 산출하고 백엔드에 기록합니다.</li>
-            <li><strong>[사용 방법] 버튼</strong>: 현재 매뉴얼 모달 창을 엽니다.</li>
-            <li><strong>[삭제] 버튼</strong>: 목록의 특정 파츠 항목을 DB와 화면에서 제거합니다.</li>
-        </ul>
-
-        <h4>4. 기능별 사용 방법 (순서대로 따라하기)</h4>
-        <ol>
-            <li><strong>[기능 1] 역학 산출</strong>: 부품명, 소재, 사용량(g), Infill(%)을 입력 후 <code>[역학 산출 & 저장]</code>을 누르면 결과 상자에 예상 비용(원)과 추정 인장강도(MPa)가 도출됩니다.</li>
-            <li><strong>[기능 2] 구글 시트/DB 자동 저장</strong>: 산출과 동시에 구글 스프레드시트 백엔드 및 브라우저 저장소에 데이터가 자동 저장되어 하단 리스트에 실시간 반영됩니다.</li>
-            <li><strong>[기능 3] 파츠 관리 및 삭제</strong>: 출력이 완료되었거나 필요 없어진 항목은 오른쪽 <code>[삭제]</code> 버튼을 눌러 구글 시트와 앱 화면에서 동시 삭제합니다.</li>
-        </ol>
-
-        <h4>5. 주의사항 및 자주 묻는 질문 (FAQ)</h4>
-        <div class="faq-q">Q1. 추정 인장강도(MPa)는 절대적인 수치인가요?</div>
-        <div class="faq-a">A. 아니요! 본 앱의 강도는 소재별 고유 기준 강도에 Infill 비율을 비례 적용한 약식 공학 산출값입니다. 적층 결 방향이나 온도 등 출력 환경에 따라 차이가 발생할 수 있습니다.</div>
-        
-        <div class="faq-q">Q2. 오프라인에서도 사용할 수 있나요?</div>
-        <div class="faq-a">A. 네, PWA 기술로 제작되어 인터넷이 끊긴 상태에서도 브라우저 저장소(LocalStorage)를 통해 정상 연산 및 저장이 가능하며, 인터넷 재연결 시 백엔드와 동기화됩니다.</div>
+        <div class="modal-body py-4 space-y-4 text-xs text-slate-600 leading-relaxed">
+            <section>
+                <h4 class="font-bold text-sm text-slate-800 mb-1 text-sky-700">1. 프로그램 소개</h4>
+                <p><strong>메카프린트(MecaPrint)</strong>는 기계공학 파츠 3D 적층 제조 시 필라멘트 소비량, 전력 소모량 및 가공 시간을 계산하여 <strong>정밀 가공 원가를 산출하는 공학 보조 PWA 웹앱</strong>입니다.</p>
+            </section>
+            <section>
+                <h4 class="font-bold text-sm text-slate-800 mb-1 text-sky-700">2. 접속 및 설치 방법 (PWA)</h4>
+                <p>• <strong>웹 접속</strong>: 배포된 깃허브 Pages 주소를 통해 모바일/PC 브라우저로 접속합니다.</p>
+                <p>• <strong>PWA 설치</strong>: 브라우저 메뉴의 <code>[홈 화면에 추가]</code> 또는 <code>[앱 설치]</code>를 눌러 독립형 앱으로 사용합니다.</p>
+            </section>
+            <section>
+                <h4 class="font-bold text-sm text-slate-800 mb-1 text-sky-700">3. 화면 주요 요소 & 용어 설명</h4>
+                <ul class="list-disc pl-4 space-y-1">
+                    <li><strong>구동 기어 (N1, Driver Gear)</strong>: 익스트루더 모터에 결합되어 필라멘트를 노즐로 밀어 넣는 핵심 주도 기어입니다.</li>
+                    <li><strong>소비 전력 (W)</strong>: 노즐 히터 및 핫베드 가열 시 소비되는 전력 수치입니다.</li>
+                    <li><strong>핀(📌) 기능</strong>: 핵심 가공 공정 데이터를 목록 최상단에 고정합니다.</li>
+                </ul>
+            </section>
+            <section>
+                <h4 class="font-bold text-sm text-slate-800 mb-1 text-sky-700">4. 기능별 사용 방법 (3가지 핵심 기능)</h4>
+                <ol class="list-decimal pl-4 space-y-1">
+                    <li><strong>[기능 1] 공정 연산 & 적층 비주얼</strong>: 수치 입력 후 <code>[공정 견적 산출 & 저장]</code> 클릭시 재료비, 전력비, 총 원가 실시간 계산.</li>
+                    <li><strong>[기능 2] 깃허브 - 구글 시트 백엔드 자동 연동</strong>: 웹앱에서 산출된 공정 결과가 구글 시트에 원격으로 즉시 기록됩니다.</li>
+                    <li><strong>[기능 3] 상단 고정(📌) 및 데이터 관리</strong>: 주요 설계 파츠를 상단 고정하거나 삭제할 수 있습니다.</li>
+                </ol>
+            </section>
+            <section>
+                <h4 class="font-bold text-sm text-slate-800 mb-1 text-sky-700">5. 주의사항 & 자주 묻는 질문 (FAQ)</h4>
+                <p><strong>Q. 음수 수치가 들어가지 않나요?</strong><br>A. 질량, 시간, 단가, 전력은 0 이하가 될 수 없으므로 마이너스(-) 입력 시 자동으로 즉시 제거됩니다.</p>
+            </section>
+        </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(renderPrints).getPrints();
-        } else {
-            loadLocalPrints();
-        }
-    });
+    document.addEventListener("DOMContentLoaded", loadLocalPrints);
+
+    function preventNegative(input) {
+        if (input.value < 0) input.value = "";
+    }
+
+    function applyPreset(type) {
+        const presets = {
+            pla: { name: "PLA 신속 시가공 파츠", weight: 45, time: 2.0, cost: 22000, watts: 250 },
+            petg: { name: "PETG 기계 내구 부품", weight: 110, time: 5.5, cost: 28000, watts: 320 },
+            abs: { name: "ABS 고온 내열 파츠", weight: 90, time: 4.5, cost: 30000, watts: 400 },
+            tpu: { name: "TPU 탄성 유연 부품", weight: 60, time: 4.0, cost: 35000, watts: 280 }
+        };
+        const p = presets[type];
+        if (!p) return;
+        document.getElementById("printName").value = p.name;
+        document.getElementById("filamentWeight").value = p.weight;
+        document.getElementById("printTime").value = p.time;
+        document.getElementById("filamentCost").value = p.cost;
+        document.getElementById("powerWatts").value = p.watts;
+    }
 
     function calculateAndSave() {
-        const partName = document.getElementById("partName").value;
-        const material = document.getElementById("material").value;
-        const weight = parseFloat(document.getElementById("weight").value);
-        const infill = parseFloat(document.getElementById("infill").value);
+        const printName = document.getElementById("printName").value.trim();
+        const weight = parseFloat(document.getElementById("filamentWeight").value);
+        const time = parseFloat(document.getElementById("printTime").value);
+        const costPerKg = parseFloat(document.getElementById("filamentCost").value);
+        const watts = parseFloat(document.getElementById("powerWatts").value);
 
-        if (!partName || isNaN(weight) || isNaN(infill)) {
-            alert("모든 치수와 항목을 올바르게 입력해주세요.");
+        if (!printName || isNaN(weight) || isNaN(time) || isNaN(costPerKg) || isNaN(watts)) {
+            alert("모든 수치 항목을 빠짐없이 올바르게 입력해 주세요.");
             return;
         }
 
-        let costPerGram = material === "PLA" ? 25 : (material === "ABS" ? 30 : 35);
-        let totalCost = Math.round(weight * costPerGram);
+        if (weight <= 0 || time <= 0 || costPerKg <= 0 || watts <= 0) {
+            alert("음수나 0 이하의 수치는 입력할 수 없습니다.");
+            return;
+        }
 
-        let baseStrength = material === "PLA" ? 50 : (material === "ABS" ? 40 : 45);
-        let estStrength = (baseStrength * (infill / 100)).toFixed(1);
+        const matCost = Math.round((weight / 1000) * costPerKg);
+        const kwh = (watts * time) / 1000;
+        const powerCost = Math.round(kwh * 150); // kWh당 약 150원 기준
+        const total = matCost + powerCost;
+        const rate = (weight / time).toFixed(1);
 
-        document.getElementById("resultBox").style.display = "block";
-        document.getElementById("resultBox").innerHTML = 
-            `<strong>[산출 결과]</strong><br>` +
-            `• 예상 제작 비용: <strong>${totalCost.toLocaleString()} 원</strong><br>` +
-            `• 추정 허용 강도: <strong>약 ${estStrength} MPa</strong>`;
+        document.getElementById("resultBox").classList.remove("hidden");
+        document.getElementById("resFilamentCost").innerText = `${matCost.toLocaleString()} 원`;
+        document.getElementById("resPowerCost").innerText = `${powerCost.toLocaleString()} 원 (${kwh.toFixed(2)} kWh)`;
+        document.getElementById("resTotalCost").innerText = `${total.toLocaleString()} 원`;
+        document.getElementById("resRate").innerText = `${rate} g/시간`;
 
         const printData = {
+            action: "add",
             id: Date.now(),
-            partName: partName,
-            material: material,
-            cost: totalCost + "원",
-            estStrength: estStrength + " MPa"
+            printName: printName,
+            filamentWeight: weight + " g",
+            printTime: time + " 시간",
+            unitCost: costPerKg.toLocaleString() + " 원/kg",
+            totalCost: total.toLocaleString() + " 원",
+            isPinned: false
         };
 
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(renderPrints).addPrint(printData);
-        } else {
-            let prints = JSON.parse(localStorage.getItem("prints") || "[]");
-            prints.push(printData);
-            localStorage.setItem("prints", JSON.stringify(prints));
-            renderPrints(prints);
+        // LocalStorage 저장
+        let prints = JSON.parse(localStorage.getItem("meca_prints") || "[]");
+        prints.push(printData);
+        localStorage.setItem("meca_prints", JSON.stringify(prints));
+        renderPrints(prints);
+
+        // 구글 시트 원격 연동 (fetch API)
+        if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL.startsWith("http")) {
+            fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(printData)
+            }).catch(err => console.log("구글 시트 저장 오류:", err));
         }
     }
 
+    function togglePin(id) {
+        let prints = JSON.parse(localStorage.getItem("meca_prints") || "[]");
+        prints = prints.map(p => p.id === id ? { ...p, isPinned: !p.isPinned } : p);
+        localStorage.setItem("meca_prints", JSON.stringify(prints));
+        renderPrints(prints);
+    }
+
     function deletePrint(id) {
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(renderPrints).deletePrint(id);
-        } else {
-            let prints = JSON.parse(localStorage.getItem("prints") || "[]").filter(p => p.id !== id);
-            localStorage.setItem("prints", JSON.stringify(prints));
-            renderPrints(prints);
+        let prints = JSON.parse(localStorage.getItem("meca_prints") || "[]").filter(p => p.id !== id);
+        localStorage.setItem("meca_prints", JSON.stringify(prints));
+        renderPrints(prints);
+
+        if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL.startsWith("http")) {
+            fetch(GAS_WEB_APP_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify({ action: "delete", id: id })
+            }).catch(err => console.log("구글 시트 삭제 오류:", err));
         }
     }
 
     function loadLocalPrints() {
-        renderPrints(JSON.parse(localStorage.getItem("prints") || "[]"));
+        renderPrints(JSON.parse(localStorage.getItem("meca_prints") || "[]"));
     }
 
     function renderPrints(prints) {
         const list = document.getElementById("printList");
         list.innerHTML = "";
         if (!prints || prints.length === 0) {
-            list.innerHTML = "<p style='text-align:center;'>저장된 3D 파츠 데이터가 없습니다.</p>";
+            list.innerHTML = "<p class='text-center text-xs text-slate-400 py-4'>저장된 공정 데이터가 없습니다.</p>";
             return;
         }
+
+        prints.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+
         prints.forEach(p => {
             const item = document.createElement("div");
-            item.className = "print-item";
+            item.className = `p-3 rounded-xl border transition flex justify-between items-center ${
+                p.isPinned ? 'bg-sky-50/80 border-sky-300 shadow-sm' : 'bg-white border-slate-200'
+            }`;
             item.innerHTML = `
                 <div>
-                    <strong>[${p.material}] ${p.partName}</strong><br>
-                    <small>비용: ${p.cost} | 추정강도: ${p.estStrength}</small>
+                    <div class="flex items-center gap-1.5">
+                        ${p.isPinned ? '<span class="text-xs">📌</span>' : ''}
+                        <strong class="text-xs font-bold text-slate-800">${p.printName}</strong>
+                        <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border">${p.filamentWeight}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5">
+                        시간: <strong>${p.printTime}</strong> | 원가: <strong>${p.totalCost}</strong>
+                    </p>
                 </div>
-                <button class="btn-delete" onclick="deletePrint(${p.id})">삭제</button>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="togglePin(${p.id})" class="p-1.5 text-xs hover:bg-slate-100 rounded-lg transition" title="상단 고정">
+                        ${p.isPinned ? '📍' : '📌'}
+                    </button>
+                    <button type="button" onclick="deletePrint(${p.id})" class="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition">
+                        삭제
+                    </button>
+                </div>
             `;
             list.appendChild(item);
         });
     }
 
     function toggleModal(show) {
-        document.getElementById("manualModal").style.display = show ? "flex" : "none";
+        const modal = document.getElementById("manualModal");
+        modal.classList.toggle("hidden", !show);
+        modal.classList.toggle("flex", show);
     }
 </script>
 </body>
