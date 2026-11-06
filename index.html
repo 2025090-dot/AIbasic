@@ -6,9 +6,8 @@
     <title>메카프린트 Pro - 3D 프린팅 공정 견적 웹앱</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1lY2FQcmludCIsCiAgInNob3J0X25hbWUiOiAiTWVjYVByaW50IiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJ0aGVtZV9jb2xvciI6ICIjMDI4NGM3Igp9">
     <style>
-        /* 1. 순수 CSS CAD 청사진 격자 배경 (무조건 화면에 출력) */
+        /* 1. CAD 청사진 모눈격자 배경 */
         body {
             background-color: #030712;
             background-image: 
@@ -18,7 +17,7 @@
             background-attachment: fixed;
         }
 
-        /* 2. 앰비언트 글로우 조명 (순수 CSS 구형 원형 광원) */
+        /* 2. 앰비언트 글로우 조명 */
         .glow-blob-left {
             position: fixed; top: -10%; left: -10%; width: 500px; height: 500px;
             background: radial-gradient(circle, rgba(2, 132, 199, 0.4) 0%, rgba(3, 7, 18, 0) 70%);
@@ -30,7 +29,7 @@
             pointer-events: none; z-index: 0;
         }
 
-        /* 3. 플로팅 글래스모피즘 네온 카운터 그림자 */
+        /* 3. 글래스모피즘 네온 카운터 그림자 */
         .glow-main-card {
             box-shadow: 0 0 45px rgba(2, 132, 199, 0.3), inset 0 0 15px rgba(56, 189, 248, 0.1);
             border: 1px solid rgba(56, 189, 248, 0.4);
@@ -51,16 +50,11 @@
 </head>
 <body class="text-slate-100 min-h-screen pb-16 sm:pb-6 flex flex-col items-center justify-center font-sans relative overflow-x-hidden selection:bg-sky-500 selection:text-white">
 
-<script>
-    // ★ Google Apps Script 웹앱 배포 URL (/exec 주소)
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_eEHtNIKcsVTaZdt6AgpZdmSc1oRz1p1K3tpHQYgMcS1MNuoZbleF80KxwDFKjEgVzw/exec";
-</script>
-
 <!-- 배경 광원 레이어 -->
 <div class="glow-blob-left"></div>
 <div class="glow-blob-right"></div>
 
-<!-- 4. PC 대화면 (1024px 이상 노트북부터) 구석 앰비언트 그래픽 -->
+<!-- PC 대화면 (노트북 이상) 구석 앰비언트 그래픽 -->
 <div class="hidden lg:flex fixed top-10 left-8 items-center gap-4 p-4 rounded-2xl bg-slate-900/80 border border-sky-500/30 backdrop-blur-md opacity-80 z-0 pointer-events-none shadow-xl">
     <div class="text-4xl bg-gear">⚙️</div>
     <div>
@@ -85,7 +79,7 @@
     <div class="text-4xl">🖨️</div>
 </div>
 
-<!-- 메인 앱 컨테이너 (글래스모피즘 네온 테두리 적용) -->
+<!-- 메인 앱 컨테이너 -->
 <div class="relative z-10 w-full max-w-xl bg-slate-900/95 backdrop-blur-2xl glow-main-card min-h-screen flex flex-col sm:min-h-0 sm:my-6 sm:rounded-3xl overflow-hidden">
     <!-- 상단 앱 헤더 -->
     <header class="p-4 bg-slate-900/90 backdrop-blur sticky top-0 z-30 border-b border-slate-800 flex justify-between items-center">
@@ -268,4 +262,286 @@
                     </div>
                     <div class="p-2.5 bg-slate-900 rounded-xl border border-slate-800">
                         <span class="font-bold text-white block mb-0.5">💡 속도 vs 품질</span>
-                        <span class="text-slate-400 text-[11px]">구동 익스트
+                        <span class="text-slate-400 text-[11px]">구동 익스트루더 토크를 높여 적층 속도를 가속하면 가공 시간당 전력비가 절감됩니다.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- 사용자 매뉴얼 모달 -->
+<div id="manualModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-5 shadow-2xl">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+            <h3 class="font-black text-base text-sky-400 flex items-center gap-1.5">📖 메카프린트 사용 매뉴얼</h3>
+            <button type="button" onclick="closeManual()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+        </div>
+        
+        <div class="modal-body py-4 space-y-4 text-xs text-slate-300 leading-relaxed">
+            <section>
+                <h4 class="font-bold text-sky-400 mb-1">1. 프로그램 소개</h4>
+                <p><strong>메카프린트(MecaPrint) Pro</strong>는 기계공학 파츠 출력 시 필라멘트 소비량, 전력비, 가공 시간을 통합 연산해 정밀 생산 원가를 산출하는 <strong>공학 PWA 웹앱</strong>입니다.</p>
+            </section>
+            <section>
+                <h4 class="font-bold text-sky-400 mb-1">2. PWA 앱 설치법</h4>
+                <p>모바일/PC 브라우저 메뉴의 <code>[홈 화면에 추가]</code>를 누르면 바탕화면에 앱 아이콘이 생성되어 단독 앱으로 구동됩니다.</p>
+            </section>
+            <section>
+                <h4 class="font-bold text-sky-400 mb-1">3. 화면 주요 용어</h4>
+                <ul class="list-disc pl-4 space-y-1 text-slate-400">
+                    <li><strong>구동 기어 (Extruder Driver)</strong>: 노즐로 필라멘트를 밀어넣는 핵심 주도 기어입니다.</li>
+                    <li><strong>소비 전력 (W)</strong>: 노즐 히터 및 핫베드 가열 시 전력 수치입니다.</li>
+                </ul>
+            </section>
+            <section>
+                <h4 class="font-bold text-sky-400 mb-1">4. 3가지 핵심 기능</h4>
+                <ol class="list-decimal pl-4 space-y-1 text-slate-400">
+                    <li><strong>[기능 1] 원가 연산 & 적층 시뮬레이션</strong>: 수치 입력 시 재료비/전력비 및 적층 모션 실시간 출력.</li>
+                    <li><strong>[기능 2] 깃허브 - 구글 시트 원격 연동</strong>: 산출 데이터가 구글 스프레드시트에 자동 연동 저장.</li>
+                    <li><strong>[기능 3] 상단 고정(📌)</strong>: 중요 파츠 데이터를 최상단에 고정 관리.</li>
+                </ol>
+            </section>
+            <section>
+                <h4 class="font-bold text-sky-400 mb-1">5. FAQ</h4>
+                <p class="text-slate-400"><strong>Q. 음수가 들어가나요?</strong><br>A. 질량, 시간, 전력은 양수만 허용되므로 마이너스(-) 수치는 자동 제거됩니다.</p>
+            </section>
+        </div>
+    </div>
+</div>
+
+<!-- 실시간 앱 토스트 알림 메시지 -->
+<div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-800 text-sky-400 border border-sky-500/40 px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
+    <span id="toastMsg">저장되었습니다!</span>
+</div>
+
+<!-- 단일 통합 스크립트 블록 (문법 에러 예방 처리 완료) -->
+<script>
+    // ★ Google Apps Script 웹앱 배포 URL (/exec 주소)
+    var GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx_eEHtNIKcsVTaZdt6AgpZdmSc1oRz1p1K3tpHQYgMcS1MNuoZbleF80KxwDFKjEgVzw/exec";
+
+    document.addEventListener("DOMContentLoaded", function() {
+        loadLocalPrints();
+    });
+
+    function switchTab(tab) {
+        var tabCalc = document.getElementById("tabCalc");
+        var tabList = document.getElementById("tabList");
+        var tabStats = document.getElementById("tabStats");
+        var btnCalc = document.getElementById("tabBtnCalc");
+        var btnList = document.getElementById("tabBtnList");
+        var btnStats = document.getElementById("tabBtnStats");
+
+        if (!tabCalc || !tabList || !tabStats) return;
+
+        tabCalc.classList.add("hidden");
+        tabList.classList.add("hidden");
+        tabStats.classList.add("hidden");
+        btnCalc.classList.remove("active-tab");
+        btnList.classList.remove("active-tab");
+        btnStats.classList.remove("active-tab");
+
+        if (tab === 'calc') {
+            tabCalc.classList.remove("hidden");
+            btnCalc.classList.add("active-tab");
+        } else if (tab === 'list') {
+            tabList.classList.remove("hidden");
+            btnList.classList.add("active-tab");
+        } else if (tab === 'stats') {
+            tabStats.classList.remove("hidden");
+            btnStats.classList.add("active-tab");
+        }
+    }
+
+    function preventNegative(input) {
+        if (input.value < 0) input.value = "";
+    }
+
+    function showToast(msg) {
+        var toast = document.getElementById("toast");
+        var toastMsg = document.getElementById("toastMsg");
+        if (!toast || !toastMsg) return;
+        toastMsg.innerText = msg;
+        toast.classList.remove("opacity-0", "pointer-events-none");
+        setTimeout(function() {
+            toast.classList.add("opacity-0", "pointer-events-none");
+        }, 2200);
+    }
+
+    function applyPreset(type) {
+        var presets = {
+            pla: { name: "PLA 신속 시가공 파츠", weight: 45, time: 2.0, cost: 22000, watts: 250 },
+            petg: { name: "PETG 기계 내구 부품", weight: 110, time: 5.5, cost: 28000, watts: 320 },
+            abs: { name: "ABS 고온 내열 파츠", weight: 90, time: 4.5, cost: 30000, watts: 400 },
+            tpu: { name: "TPU 탄성 유연 부품", weight: 60, time: 4.0, cost: 35000, watts: 280 }
+        };
+        var p = presets[type];
+        if (!p) return;
+        document.getElementById("printName").value = p.name;
+        document.getElementById("filamentWeight").value = p.weight;
+        document.getElementById("printTime").value = p.time;
+        document.getElementById("filamentCost").value = p.cost;
+        document.getElementById("powerWatts").value = p.watts;
+        showToast("⚡ " + p.name + " 프리셋 적용 완료!");
+    }
+
+    function calculateAndSave() {
+        var printName = document.getElementById("printName").value.trim();
+        var weight = parseFloat(document.getElementById("filamentWeight").value);
+        var time = parseFloat(document.getElementById("printTime").value);
+        var costPerKg = parseFloat(document.getElementById("filamentCost").value);
+        var watts = parseFloat(document.getElementById("powerWatts").value);
+
+        if (!printName || isNaN(weight) || isNaN(time) || isNaN(costPerKg) || isNaN(watts)) {
+            showToast("⚠️ 모든 항목을 올바르게 입력해 주세요.");
+            return;
+        }
+
+        if (weight <= 0 || time <= 0 || costPerKg <= 0 || watts <= 0) {
+            showToast("⚠️ 0 이하 수치는 입력할 수 없습니다.");
+            return;
+        }
+
+        var matCost = Math.round((weight / 1000) * costPerKg);
+        var kwh = (watts * time) / 1000;
+        var powerCost = Math.round(kwh * 150);
+        var total = matCost + powerCost;
+        var rate = (weight / time).toFixed(1);
+
+        var matPercent = Math.round((matCost / total) * 100);
+        var powerPercent = 100 - matPercent;
+
+        document.getElementById("resultBox").classList.remove("hidden");
+        document.getElementById("resTotalCost").innerText = total.toLocaleString() + " 원";
+        document.getElementById("resRate").innerText = rate + " g/h";
+        document.getElementById("resMatCostVal").innerText = matCost.toLocaleString() + "원 (" + matPercent + "%)";
+        document.getElementById("resPowerCostVal").innerText = powerCost.toLocaleString() + "원 (" + powerPercent + "%)";
+
+        document.getElementById("barMat").style.width = matPercent + "%";
+        document.getElementById("barPower").style.width = powerPercent + "%";
+
+        var printData = {
+            action: "add",
+            id: Date.now(),
+            printName: printName,
+            filamentWeight: weight + " g",
+            printTime: time + " 시간",
+            unitCost: costPerKg.toLocaleString() + " 원/kg",
+            totalCost: total.toLocaleString() + " 원",
+            isPinned: false
+        };
+
+        var prints = JSON.parse(localStorage.getItem("meca_prints") || "[]");
+        prints.push(printData);
+        localStorage.setItem("meca_prints", JSON.stringify(prints));
+        renderPrints(prints);
+
+        try {
+            if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL && GAS_WEB_APP_URL.indexOf("http") === 0) {
+                fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify(printData)
+                }).catch(function(err) { console.log("구글 시트 저장 오류:", err); });
+            }
+        } catch(e) {
+            console.log("통신 에러 처리:", e);
+        }
+
+        showToast("🚀 산출 완료 및 저장되었습니다!");
+    }
+
+    function copySummary() {
+        var name = document.getElementById("printName").value;
+        var total = document.getElementById("resTotalCost").innerText;
+        var text = "[MecaPrint 견적요약]\n• 파츠명: " + name + "\n• 총 생산 원가: " + total;
+        navigator.clipboard.writeText(text);
+        showToast("📋 클립보드에 요약이 복사되었습니다!");
+    }
+
+    function togglePin(id) {
+        var prints = JSON.parse(localStorage.getItem("meca_prints") || "[]");
+        prints = prints.map(function(p) { return p.id === id ? Object.assign({}, p, { isPinned: !p.isPinned }) : p; });
+        localStorage.setItem("meca_prints", JSON.stringify(prints));
+        renderPrints(prints);
+    }
+
+    function deletePrint(id) {
+        var prints = JSON.parse(localStorage.getItem("meca_prints") || "[]").filter(function(p) { return p.id !== id; });
+        localStorage.setItem("meca_prints", JSON.stringify(prints));
+        renderPrints(prints);
+
+        try {
+            if (typeof GAS_WEB_APP_URL !== 'undefined' && GAS_WEB_APP_URL && GAS_WEB_APP_URL.indexOf("http") === 0) {
+                fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain" },
+                    body: JSON.stringify({ action: "delete", id: id })
+                }).catch(function(err) { console.log("구글 시트 삭제 오류:", err); });
+            }
+        } catch(e) {}
+        showToast("🗑️ 데이터가 삭제되었습니다.");
+    }
+
+    function loadLocalPrints() {
+        renderPrints(JSON.parse(localStorage.getItem("meca_prints") || "[]"));
+    }
+
+    function renderPrints(prints) {
+        var list = document.getElementById("printList");
+        var badge = document.getElementById("listBadge");
+        if (!list) return;
+        list.innerHTML = "";
+
+        if (!prints || prints.length === 0) {
+            list.innerHTML = "<p class='text-center text-xs text-slate-500 py-8'>저장된 공정 데이터가 없습니다.</p>";
+            if (badge) badge.classList.add("hidden");
+            return;
+        }
+
+        if (badge) {
+            badge.innerText = prints.length;
+            badge.classList.remove("hidden");
+        }
+        prints.sort(function(a, b) { return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0); });
+
+        prints.forEach(function(p) {
+            var item = document.createElement("div");
+            item.className = "p-3.5 rounded-xl border transition flex justify-between items-center " +
+                (p.isPinned ? "bg-sky-950/60 border-sky-500/60 shadow-lg" : "bg-slate-900 border-slate-800");
+            item.innerHTML = 
+                '<div>' +
+                    '<div class="flex items-center gap-1.5">' +
+                        (p.isPinned ? '<span class="text-xs">📌</span>' : '') +
+                        '<strong class="text-xs font-bold text-white">' + p.printName + '</strong>' +
+                        '<span class="text-[9px] bg-slate-800 text-sky-300 px-1.5 py-0.5 rounded border border-slate-700">' + p.filamentWeight + '</span>' +
+                    '</div>' +
+                    '<p class="text-[11px] text-slate-400 mt-1">' +
+                        '시간: <strong>' + p.printTime + '</strong> | 원가: <strong class="text-sky-400">' + p.totalCost + '</strong>' +
+                    '</p>' +
+                '</div>' +
+                '<div class="flex items-center gap-1">' +
+                    '<button type="button" onclick="togglePin(' + p.id + ')" class="p-1.5 text-xs hover:bg-slate-800 rounded-lg transition" title="상단 고정">' +
+                        (p.isPinned ? '📍' : '📌') +
+                    '</button>' +
+                    '<button type="button" onclick="deletePrint(' + p.id + ')" class="px-2 py-1 bg-red-500/80 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition">' +
+                        '삭제' +
+                    '</button>' +
+                '</div>';
+            list.appendChild(item);
+        });
+    }
+
+    function openManual() { 
+        var modal = document.getElementById("manualModal");
+        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+    }
+    function closeManual() { 
+        var modal = document.getElementById("manualModal");
+        if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+    }
+</script>
+</body>
+</html>
